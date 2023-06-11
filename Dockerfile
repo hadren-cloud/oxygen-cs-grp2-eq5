@@ -29,4 +29,4 @@ USER appuser
 COPY src/ .
 
 # Run the application
-CMD ["python", "main.py"]
+CMD ["python", "src/main.py"]
