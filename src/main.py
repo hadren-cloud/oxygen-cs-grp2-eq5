@@ -3,18 +3,32 @@ import logging
 import requests
 import json
 import time
-
+import os
+import psycopg2
 
 class Main:
     def __init__(self):
         self._hub_connection = None
-        self.HOST = None  # Setup your host here
-        self.TOKEN = None  # Setup your token here
-        self.TICKETS = None  # Setup your tickets here
-        self.T_MAX = None  # Setup your max temperature here
-        self.T_MIN = None  # Setup your min temperature here
-        self.DATABASE = None  # Setup your database here
+        self.HOST = os.getenv('HOST', 'default_host')  # Setup your host here
+        self.TOKEN = os.getenv('TOKEN')  # Setup your token here
+        self.TICKETS = os.getenv('TICKETS', 'default_tickets')  # Setup your tickets here
+        self.T_MAX = os.getenv('T_MAX', 'default_max_temp')  # Setup your max temperature here
+        self.T_MIN = os.getenv('T_MIN', 'default_min_temp')  # Setup your min temperature here
+        self.DATABASE = self.setup_database()  # Setup your database here
 
+        if self.TOKEN is None:
+            raise ValueError("TOKEN environment variable is not set")
+
+    def setup_database(self):
+        db_config = {
+            'dbname': os.getenv('DB_NAME', 'default_database'),
+            'user': os.getenv('DB_USER', 'default_user'),
+            'password': os.getenv('DB_PASSWORD', 'default_password'),
+            'host': os.getenv('DB_HOST', 'default_host'),
+        }
+        connection = psycopg2.connect(**db_config)
+        return connection
+    
     def __del__(self):
         if self._hub_connection != None:
             self._hub_connection.stop()
