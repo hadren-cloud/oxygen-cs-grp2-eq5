@@ -1,32 +1,17 @@
-# Base stage
-FROM python:3.9-slim AS base
+FROM python:3.8
 
-# Set Python-related environment variables to reduce Python bytecode in the container
-ENV PYTHONDONTWRITEBYTECODE 1
-ENV PYTHONUNBUFFERED 1
+# Set the working directory
+WORKDIR /usr/src/app
 
-# Python dependencies stage
-FROM base AS python-deps
+# Install system dependencies
+RUN apt-get update && apt-get install -y libpq-dev gcc
 
-# Install pipenv and dependencies
-RUN pip install pipenv
-COPY Pipfile Pipfile.lock ./
-RUN PIPENV_VENV_IN_PROJECT=1 pipenv install --deploy
+# Copy and install Python dependencies
+COPY Pipfile* ./
+RUN pip install pipenv && pipenv install --system --deploy
 
-# Runtime stage
-FROM base AS runtime
+# Copy the rest of the application code
+COPY . .
 
-# Copy virtual env from python-deps stage
-COPY --from=python-deps /.venv /.venv
-ENV PATH="/.venv/bin:$PATH"
-
-# Create a new user to run your application
-RUN useradd --create-home appuser
-WORKDIR /home/appuser
-USER appuser
-
-# Copy your application into the container
-COPY src/ .
-
-# Run the application
+# Start the application
 CMD ["python", "src/main.py"]
