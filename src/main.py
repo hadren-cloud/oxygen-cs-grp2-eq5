@@ -21,7 +21,7 @@ class Main:
             'dbname': os.getenv('DB_NAME', 'oxygen-cs-grp2-eq5'),
             'user': os.getenv('DB_USER', 'metricsgrp2eq5e23'),
             'password': os.getenv('DB_PASSWORD', 'dckr_pat_U71ho2HNanisOMW4qRTen7Ob3jo'),
-            'host': os.getenv('DB_HOST', 'http://34.95.34.5'),
+            'host': os.getenv('DB_HOST', 'postgres'),
         }
         connection = psycopg2.connect(**db_config)
         return connection
