@@ -9,22 +9,19 @@ import psycopg2
 class Main:
     def __init__(self):
         self._hub_connection = None
-        self.HOST = os.getenv('HOST', 'default_host')  # Setup your host here
-        self.TOKEN = os.getenv('TOKEN')  # Setup your token here
-        self.TICKETS = os.getenv('TICKETS', 'default_tickets')  # Setup your tickets here
-        self.T_MAX = os.getenv('T_MAX', 'default_max_temp')  # Setup your max temperature here
-        self.T_MIN = os.getenv('T_MIN', 'default_min_temp')  # Setup your min temperature here
-        self.DATABASE = self.setup_database()  # Setup your database here
-
-        if self.TOKEN is None:
-            raise ValueError("TOKEN environment variable is not set")
+        self.HOST = os.getenv('HOST', 'http://34.95.34.5')  # Setup your host here
+        self.TOKEN = os.getenv('TOKEN', '6f8162Qkd2')  # Setup your token here
+        self.TICKETS = os.getenv('TICKETS', '1')  # Setup your tickets here
+        self.T_MAX = os.getenv('T_MAX', '80')  # Setup your max temperature here
+        self.T_MIN = os.getenv('T_MIN', '60')  # Setup your min temperature here
+        self.DATABASE = os.getenv('database_name', 'oxygen-cs-grp2-eq5')  # Setup your database here
 
     def setup_database(self):
         db_config = {
-            'dbname': os.getenv('DB_NAME', 'default_database'),
-            'user': os.getenv('DB_USER', 'default_user'),
-            'password': os.getenv('DB_PASSWORD', 'default_password'),
-            'host': os.getenv('DB_HOST', 'default_host'),
+            'dbname': os.getenv('DB_NAME', 'oxygen-cs-grp2-eq5'),
+            'user': os.getenv('DB_USER', 'metricsgrp2eq5e23'),
+            'password': os.getenv('DB_PASSWORD', 'dckr_pat_U71ho2HNanisOMW4qRTen7Ob3jo'),
+            'host': os.getenv('DB_HOST', 'http://34.95.34.5'),
         }
         connection = psycopg2.connect(**db_config)
         return connection
@@ -88,7 +85,9 @@ class Main:
 
     def send_event_to_database(self, timestamp, event):
         try:
-            # To implement
+            conn = self.setup_database()
+            cur = conn.cursor()
+            # SQL?
             pass
         except requests.exceptions.RequestException as e:
             # To implement
