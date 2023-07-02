@@ -55,7 +55,7 @@ jobs:
       uses: docker/login-action@v1
       with:
           username: metricsgrp2eq5e23
-          password: dckr_pat_U71ho2HNanisOMW4qRTen7Ob3jo
+          password: WeLoveDevops
     - name: Build and Push Docker Image
       run: |
         docker build -t metricsgrp2eq5e23/oxygen-cs-grp2-eq5 .
