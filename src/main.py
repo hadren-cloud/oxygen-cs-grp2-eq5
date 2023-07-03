@@ -1,20 +1,52 @@
 from signalrcore.hub_connection_builder import HubConnectionBuilder
+import datetime
 import logging
 import requests
 import json
 import time
-
+import os
+import psycopg2
 
 class Main:
     def __init__(self):
         self._hub_connection = None
-        self.HOST = None  # Setup your host here
-        self.TOKEN = None  # Setup your token here
-        self.TICKETS = None  # Setup your tickets here
-        self.T_MAX = None  # Setup your max temperature here
-        self.T_MIN = None  # Setup your min temperature here
-        self.DATABASE = None  # Setup your database here
+        self.HOST = os.getenv('HOST', 'http://34.95.34.5')  # Setup your host here
+        self.TOKEN = os.getenv('TOKEN', '6f8162Qkd2')  # Setup your token here
+        self.TICKETS = os.getenv('TICKETS', '10')  # Setup your tickets here
+        self.T_MAX = os.getenv('T_MAX', '50')  # Setup your max temperature here
+        self.T_MIN = os.getenv('T_MIN', '30')  # Setup your min temperature here
+        self.DATABASE = os.getenv('database_name', 'oxygencsgrp2eq5')  # Setup your database here
 
+    def setup_database(self):
+        db_config = {
+            'dbname': 'postgres',  # Temporarily connect to the default database
+            'user': os.getenv('DB_USER', 'postgres'),
+            'password': os.getenv('DB_PASSWORD', 'root'),
+            'host': os.getenv('DB_HOST', 'localhost'),
+        }
+        connection = psycopg2.connect(**db_config)
+        connection.set_isolation_level(psycopg2.extensions.ISOLATION_LEVEL_AUTOCOMMIT)
+        
+        dbname = os.getenv('DB_NAME', 'oxygencsgrp2eq5')
+        with connection.cursor() as cursor:
+            cursor.execute(f"SELECT 1 FROM pg_catalog.pg_database WHERE datname = '{dbname}'")
+            exists = cursor.fetchone()
+            if not exists:
+                cursor.execute(f"CREATE DATABASE {dbname}")
+
+        connection.close()  # Close the temporary connection
+
+        # Now connect to the new database
+        db_config['dbname'] = dbname
+        new_connection = psycopg2.connect(**db_config)
+        cursor = new_connection.cursor()
+
+        create_table_query = "CREATE TABLE IF NOT EXISTS sensordatas (timestamp TIMESTAMP PRIMARY KEY, temperature FLOAT)"
+
+        cursor.execute(create_table_query)
+        new_connection.commit()
+        return new_connection
+    
     def __del__(self):
         if self._hub_connection != None:
             self._hub_connection.stop()
@@ -53,11 +85,14 @@ class Main:
 
     def onSensorDataReceived(self, data):
         try:
-            print(data[0]["date"] + " --> " + data[0]["data"])
+            date_format = "%Y-%m-%dT%H:%M:%S.%f"
+            print(data[0]["date"] + " --> " + data[0]["data"], flush=True)
             date = data[0]["date"]
-            dp = float(data[0]["data"])
-            self.send_temperature_to_fastapi(date, dp)
-            self.analyzeDatapoint(date, dp)
+            converted_date = datetime.datetime.strptime(date[:25], date_format)
+            datapoint = float(data[0]["data"])
+            # self.send_temperature_to_fastapi(date, dp)
+            self.send_event_to_database(converted_date, datapoint)
+            self.analyzeDatapoint(date, datapoint)
         except Exception as err:
             print(err)
 
@@ -74,11 +109,28 @@ class Main:
 
     def send_event_to_database(self, timestamp, event):
         try:
-            # To implement
-            pass
-        except requests.exceptions.RequestException as e:
-            # To implement
-            pass
+            print(event)
+            conn = self.setup_database()
+            cur = conn.cursor()
+
+            # Defining the insert query
+            insert_query = f"""
+            INSERT INTO sensorDatas (timestamp, temperature)
+            VALUES ('{timestamp}', '{event}');
+            """
+            # Executing the query
+            cur.execute(insert_query)
+
+            # Commit the transaction
+            conn.commit()
+
+            # Close the cursor and connection
+            cur.close()
+            conn.close()
+        except psycopg2.Error as e:
+            print("An error occurred while trying to write to the database: ", e)
+        except Exception as e:
+            print("An unexpected error occurred: ", e)
 
 
 if __name__ == "__main__":
