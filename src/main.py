@@ -5,7 +5,10 @@ import requests
 import json
 import time
 import os
+from dotenv import load_dotenv
 import psycopg2
+
+load_dotenv('variables.env')
 
 class Main:
     def __init__(self):
