@@ -30,14 +30,19 @@ pipenv install
 
 ## Setup
 
-You need to setup the following variables inside the Main class:
+This project requires a `.env` file to function correctly. Please create a `variables.env` file in the root of the project directory and ensure it includes the following variables:
 
-- HOST: The host of the sensor hub and HVAC system.
-- TOKEN: The token for authenticating requests.
-- TICKETS: The number of tickets.
-- T_MAX: The maximum allowed temperature.
-- T_MIN: The minimum allowed temperature.
-- DATABASE: The database connection details.
+- `HOST`: The host address for the service. Format: 'http://[ip_address]'.
+- `TOKEN`: The secret token for authentication. Format: Alphanumeric string.
+- `TICKETS`: The number of tickets. Format: Numeric string.
+- `T_MAX`: The maximum temperature. Format: Numeric string.
+- `T_MIN`: The minimum temperature. Format: Numeric string.
+- `DB_NAME`: The name of the database. Format: Alphanumeric string.
+- `DB_USER`: The username for the database. Format: Alphanumeric string.
+- `DB_PASSWORD`: The password for the database. Format: Alphanumeric string.
+- `DB_HOST`: The host address for the database. Format: 'localhost' or '[ip_address]'.
+
+Some default variables are set but the project will not work unless you provide the credentials.
 
 ## Running the Program
 
