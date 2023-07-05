@@ -14,17 +14,17 @@ class Main:
     def __init__(self):
         self._hub_connection = None
         self.HOST = os.getenv('HOST', 'http://34.95.34.5')  # Setup your host here
-        self.TOKEN = os.getenv('TOKEN', '6f8162Qkd2')  # Setup your token here
+        self.TOKEN = os.getenv('TOKEN')  # Setup your token here
         self.TICKETS = os.getenv('TICKETS', '10')  # Setup your tickets here
         self.T_MAX = os.getenv('T_MAX', '50')  # Setup your max temperature here
         self.T_MIN = os.getenv('T_MIN', '30')  # Setup your min temperature here
-        self.DATABASE = os.getenv('database_name', 'oxygencsgrp2eq5')  # Setup your database here
+        self.DATABASE = os.getenv('DB_NAME', 'oxygencsgrp2eq5')  # Setup your database here
 
     def setup_database(self):
         db_config = {
             'dbname': 'postgres',  # Temporarily connect to the default database
             'user': os.getenv('DB_USER', 'postgres'),
-            'password': os.getenv('DB_PASSWORD', 'root'),
+            'password': os.getenv('DB_PASSWORD'),
             'host': os.getenv('DB_HOST', 'localhost'),
         }
         connection = psycopg2.connect(**db_config)
