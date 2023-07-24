@@ -6,12 +6,9 @@ metadata:
         app: oxygen
 data:
     HOST: 'http://34.95.34.5'
-    TOKEN: '6f8162Qkd2'
     TICKETS: '10'
     T_MAX: '50'
     T_MIN: '30'
     DB_NAME: 'oxygencsgrp2eq5'
-    DB_USER: 'postgres'
-    DB_PASSWORD: 'postgres'
     DB_HOST: 'postgres-service'
 

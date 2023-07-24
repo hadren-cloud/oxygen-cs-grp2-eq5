@@ -27,3 +27,7 @@ spec:
                   envFrom:
                       - configMapRef:
                             name: oxygen-config
+                      - secretRef:
+                            name: db-user-pass
+                      - secretRef:
+                            name: hvac-token
