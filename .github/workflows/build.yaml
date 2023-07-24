@@ -48,6 +48,6 @@ jobs:
     -   name: Deploy to Kubernetes
         uses: actions-hub/kubectl@master
         env:
-            KUBE_CONFIG: ${{ secrets.kube_conf2 }}
+            KUBE_CONFIG: ${{ secrets.kube_conf }}
         with:
             args: delete pod -l app=oxygen
