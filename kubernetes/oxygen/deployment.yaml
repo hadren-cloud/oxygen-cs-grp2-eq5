@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: oxygen-deployment
+    labels:
+        app: oxygen
+spec:
+    replicas: 1
+    selector:
+        matchLabels:
+            app: oxygen
+    template:
+        metadata:
+            labels:
+                app: oxygen
+        spec:
+            containers:
+                - name: oxygen
+                  image: metricsgrp2eq5e23/oxygen-cs-grp2-eq5:latest
+                  resources:
+                      limits:
+                          cpu: 20m
+                          memory: 25Mi
+                      requests:
+                          cpu: 20m
+                          memory: 15Mi
+                  envFrom:
+                      - configMapRef:
+                            name: oxygen-config
+                      - secretRef:
+                            name: db-user-pass
+                      - secretRef:
+                            name: hvac-token

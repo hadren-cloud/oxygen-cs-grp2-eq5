@@ -5,6 +5,7 @@ WORKDIR /usr/src/app
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y libpq-dev gcc
+RUN pip install python-dotenv
 
 # Copy and install Python dependencies
 COPY Pipfile* ./
