@@ -8,31 +8,36 @@ import os
 from dotenv import load_dotenv
 import psycopg2
 
-load_dotenv('variables.env')
+load_dotenv("variables.env")
+
 
 class Main:
     def __init__(self):
         self._hub_connection = None
-        self.HOST = os.getenv('HOST', 'http://34.95.34.5')  # Setup your host here
-        self.TOKEN = os.getenv('TOKEN')  # Setup your token here
-        self.TICKETS = os.getenv('TICKETS', '10')  # Setup your tickets here
-        self.T_MAX = os.getenv('T_MAX', '50')  # Setup your max temperature here
-        self.T_MIN = os.getenv('T_MIN', '30')  # Setup your min temperature here
-        self.DATABASE = os.getenv('DB_NAME', 'oxygencsgrp2eq5')  # Setup your database here
+        self.HOST = os.getenv("HOST", "http://34.95.34.5")  # Setup your host here
+        self.TOKEN = os.getenv("TOKEN")  # Setup your token here
+        self.TICKETS = os.getenv("TICKETS", "10")  # Setup your tickets here
+        self.T_MAX = os.getenv("T_MAX", "50")  # Setup your max temperature here
+        self.T_MIN = os.getenv("T_MIN", "30")  # Setup your min temperature here
+        self.DATABASE = os.getenv(
+            "DB_NAME", "oxygencsgrp2eq5"
+        )  # Setup your database here
 
     def setup_database(self):
         db_config = {
-            'dbname': 'postgres',  # Temporarily connect to the default database
-            'user': os.getenv('DB_USER', 'postgres'),
-            'password': os.getenv('DB_PASSWORD'),
-            'host': os.getenv('DB_HOST', 'localhost'),
+            "dbname": "postgres",  # Temporarily connect to the default database
+            "user": os.getenv("DB_USER", "postgres"),
+            "password": os.getenv("DB_PASSWORD"),
+            "host": os.getenv("DB_HOST", "localhost"),
         }
         connection = psycopg2.connect(**db_config)
         connection.set_isolation_level(psycopg2.extensions.ISOLATION_LEVEL_AUTOCOMMIT)
-        
-        dbname = os.getenv('DB_NAME', 'oxygencsgrp2eq5')
+
+        dbname = os.getenv("DB_NAME", "oxygencsgrp2eq5")
         with connection.cursor() as cursor:
-            cursor.execute(f"SELECT 1 FROM pg_catalog.pg_database WHERE datname = '{dbname}'")
+            cursor.execute(
+                f"SELECT 1 FROM pg_catalog.pg_database WHERE datname = '{dbname}'"
+            )
             exists = cursor.fetchone()
             if not exists:
                 cursor.execute(f"CREATE DATABASE {dbname}")
@@ -40,16 +45,18 @@ class Main:
         connection.close()  # Close the temporary connection
 
         # Now connect to the new database
-        db_config['dbname'] = dbname
+        db_config["dbname"] = dbname
         new_connection = psycopg2.connect(**db_config)
         cursor = new_connection.cursor()
 
         create_table_query = "CREATE TABLE IF NOT EXISTS sensordatas (timestamp TIMESTAMP PRIMARY KEY, temperature FLOAT)"
+        create_table_query_for_hvacaction = "CREATE TABLE IF NOT EXISTS hvacaction (id SERIAL PRIMARY KEY, date TIMESTAMP, message TEXT)"
 
         cursor.execute(create_table_query)
+        cursor.execute(create_table_query_for_hvacaction)
         new_connection.commit()
         return new_connection
-    
+
     def __del__(self):
         if self._hub_connection != None:
             self._hub_connection.stop()
@@ -84,7 +91,9 @@ class Main:
         self._hub_connection.on("ReceiveSensorData", self.onSensorDataReceived)
         self._hub_connection.on_open(lambda: print("||| Connection opened."))
         self._hub_connection.on_close(lambda: print("||| Connection closed."))
-        self._hub_connection.on_error(lambda data: print(f"||| An exception was thrown closed: {data.error}"))
+        self._hub_connection.on_error(
+            lambda data: print(f"||| An exception was thrown closed: {data.error}")
+        )
 
     def onSensorDataReceived(self, data):
         try:
@@ -108,7 +117,11 @@ class Main:
     def sendActionToHvac(self, date, action, nbTick):
         r = requests.get(f"{self.HOST}/api/hvac/{self.TOKEN}/{action}/{nbTick}")
         details = json.loads(r.text)
-        print(details)
+        response_message = details.get(
+            "Response", ""
+        )  # Extract the message from the details
+        print(response_message)
+        self.log_hvac_action(date, response_message)  # Logging the action
 
     def send_event_to_database(self, timestamp, event):
         try:
@@ -128,6 +141,26 @@ class Main:
             conn.commit()
 
             # Close the cursor and connection
+            cur.close()
+            conn.close()
+        except psycopg2.Error as e:
+            print("An error occurred while trying to write to the database: ", e)
+        except Exception as e:
+            print("An unexpected error occurred: ", e)
+
+    def log_hvac_action(self, date, message):
+        try:
+            conn = self.setup_database()
+            cur = conn.cursor()
+
+            insert_query = f"""
+            INSERT INTO hvacaction (date, message)
+            VALUES ('{date}', '{message}');
+            """
+
+            cur.execute(insert_query)
+            conn.commit()
+
             cur.close()
             conn.close()
         except psycopg2.Error as e:
